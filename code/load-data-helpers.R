@@ -1,112 +1,136 @@
-# function to load data sets from COMPADRE data base with full trait data
-compadre_data_load <- function(param = "growth", gform = "tree",
-                               trait_data, compadre_mat,
-                               compadre_meta, sp.list) {
+# helper function to tidy compadre data and trait data
+compadre_data_load <- function(compadre_data = NULL,
+                               trait_data = NULL,
+                               vital = "growth",
+                               gform = NULL) {
   
-  comp.meta <- compadre_meta
-  gform.vec <- compadre_meta$GrowthType[match(sp.list, compadre_meta$SpeciesAccepted)]
+  # check all data available
+  if (is.null(compadre_data))
+    stop("COMPADRE data must be provided", call. = FALSE)
+  if (is.null(trait_data))
+    stop("trait data must be provided", call. = FALSE)
   
-  tree.trait <- trait_data[which(gform.vec == "Tree"), ]
-  herb.trait <- trait_data[which(gform.vec == "Herbaceous perennial"), ]
-  palm.trait <- trait_data[which(gform.vec == "Palm"), ]
-  shrub.trait <- trait_data[which(gform.vec == "Shrub"), ]
+  # check vital rate
+  if (!(vital %in% c("growth", "fec", "surv")))
+    stop("vital must be one of growth, fec or surv", call. = FALSE)
   
-  cp.mats <- compadre_mat
+  # subset compadre data to size-structured matrices with > 7 classes
+  cp.sub <- which((compadre_data$metadata$MatrixCriteriaSize == "Yes") &
+                    (compadre_data$metadata$MatrixDimension > 7) &
+                    !is.na(sapply(compadre_data$mat, function(x) x[[2]][1, 1])))
+  
+  # pull out species names
+  sp.names <- unique(compadre_data$metadata$SpeciesAccepted[cp.sub])
+
+  # check trait data (replace all this with trait_data)
+  all.traits <- trait_data
+
+  # pull out data on growth form for each species
+  gform.vec <- compadre$metadata$GrowthType[cp.sub][match(sp.names,
+                                                          compadre$metadata$SpeciesAccepted[cp.sub])]
+  
+  # pull out population matrices for each vital rate
+  cp.mats <- compadre$mat[cp.sub]
   cp.surv <- lapply(cp.mats, function(x) apply(x[[2]], 2, sum))
   cp.grow <- lapply(cp.mats, function(x) x[[2]])
-  cp.fec <- lapply(cp.mats, function(x) apply(x[[3]] + x[[4]], 2, sum,
-                                              na.rm = TRUE))
+  cp.fec <- lapply(cp.mats, function(x) apply(x[[3]] + x[[4]], 2, sum, na.rm = TRUE))
   
-  if (param == 'surv') {
-    cp.sub2 <- which(sapply(cp.surv, function(x) max(x) == 0))
-    cp.surv <- cp.surv[-cp.sub2]
-    mats.out <- cp.mats[-cp.sub2]
+  # pull out metadata for subsetted species
+  comp.meta <- compadre$metadata[cp.sub, ]
+
+  # tidy survival data if needed (remove matrices with all zeros and truncate values > 1)  
+  if (vital == "surv") {
+    cp_rm <- which(sapply(cp.surv, function(x) max(x) == 0))
+    cp.surv <- cp.surv[-cp_rm]
+    mats.out <- cp.mats[-cp_rm]
     n.bins <- sapply(cp.surv, length)
     y <- matrix(NA, nrow=length(cp.surv), ncol=max(n.bins))
     for (i in seq(along=cp.surv)) {
-      y[i, 1:n.bins[i]] <- ifelse(cp.surv[[i]] > 1, 1, cp.surv[[i]])
+      y[i, seq_len(n.bins[i])] <- ifelse(cp.surv[[i]] > 1, 1, cp.surv[[i]])
     }
     n.obs <- length(cp.surv)
-  } else {
-    if (param == 'fec') {
-      cp.sub2 <- which(sapply(cp.fec, function(x) max(x) == 0))
-      cp.fec <- cp.fec[-cp.sub2]
-      mats.out <- cp.mats[-cp.sub2]
-      n.bins <- sapply(cp.fec, length)
-      y <- matrix(NA, nrow=length(cp.fec), ncol=max(n.bins))
-      for (i in seq(along=cp.fec)) {
-        y[i, 1:n.bins[i]] <- round(cp.fec[[i]])
-      }
-      n.obs <- length(cp.fec)
-    } else {
-      if (param != "growth") {
-        warning(paste0(param, " is not a known demographic parameter; param = 'growth used by default"),
-                call. = FALSE)
-      }
-      cp.sub2 <- which(sapply(cp.fec, function(x) max(x) == 0))
-      cp.grow <- cp.grow[-cp.sub2]
-      mats.out <- cp.mats[-cp.sub2]
-      n.bins <- sapply(cp.grow, ncol)
-      y <- array(NA, dim = c(max(sapply(cp.grow, ncol)),
-                             max(sapply(cp.grow, ncol)),
-                             length(cp.grow)))
-      for (i in 1:dim(y)[3]) {
-        y[1:n.bins[i], 1:n.bins[i], i] <- cp.grow[[i]]
-      }
+  }
+  
+  # tidy fecundity data (remove matrices with all zeros and round to nearest whole number)
+  if (vital == "fec") {
+    cp_rm <- which(sapply(cp.fec, function(x) max(x) == 0))
+    cp.fec <- cp.fec[-cp_rm]
+    mats.out <- cp.mats[-cp_rm]
+    n.bins <- sapply(cp.fec, length)
+    y <- matrix(NA, nrow = length(cp.fec), ncol = max(n.bins))
+    for (i in seq_along(cp.fec)) {
+      y[i, seq_len(n.bins[i])] <- round(cp.fec[[i]])
+    }
+    n.obs <- length(cp.fec)
+  }
+  
+  # tidy growth data (remove matrices with all zeros)
+  if (vital == "growth") {
+    cp_rm <- which(sapply(cp.fec, function(x) max(x) == 0))
+    cp.grow <- cp.grow[-cp_rm]
+    mats.out <- cp.mats[-cp_rm]
+    n.bins <- sapply(cp.grow, ncol)
+    y <- array(NA, dim = c(max(sapply(cp.grow, ncol)),
+                           max(sapply(cp.grow, ncol)),
+                           length(cp.grow)))
+    for (i in seq_len(dim(y)[3])) {
+      y[1:n.bins[i], 1:n.bins[i], i] <- cp.grow[[i]]
     }
   }
   
-  GFORM <- as.integer(as.factor(compadre_meta$GrowthType)[-cp.sub2])
-  GFORM <- ifelse(is.na(GFORM), max(GFORM, na.rm = TRUE) + 1, GFORM)
-  SPECIES <- as.integer(as.factor(compadre_meta$SpeciesAccepted[-cp.sub2]))
-  STUDY <- as.integer(as.factor(compadre_meta$DOI.ISBN[-cp.sub2]))
-  comp.meta <- comp.meta[-cp.sub2, ]
+  # subset growth form, species, study and metadata objects to included species
+  growth <- as.integer(compadre$metadata$GrowthType[cp.sub])
+  growth <- growth[-cp_rm]
+  growth <- ifelse(is.na(growth), max(growth, na.rm = TRUE) + 1, growth)
+  growth <- as.integer(as.factor(growth))
+  species <- as.integer(as.factor(compadre$metadata$SpeciesAccepted[cp.sub]))
+  species <- species[-cp_rm]
+  species <- as.integer(as.factor(species))
+  study <- as.integer(as.factor(compadre$metadata$DOI.ISBN[cp.sub]))
+  study <- study[-cp_rm]
+  study <- as.integer(as.factor(study))
+  comp.meta <- comp.meta[-cp_rm, ]
   
-  trait <- matrix(GFORM, nrow = 1)
+  # create trait matrix
+  trait <- matrix(growth, nrow = 1)
   trait.store <- NULL
-  for (i in 1:nrow(trait)) {
-    trait.store <- rbind(trait.store, t(model.matrix( ~ factor(trait[i, ])))[-1, ])
+  for (i in seq_len(nrow(trait))) {
+    trait.store <- rbind(trait.store, t(model.matrix(~factor(trait[i, ])))[-1, ])
   }
   x <- t(trait.store)
   colnames(x) <- NULL
-  groups <- matrix(SPECIES, ncol = 1)
+  groups <- matrix(species, ncol = 1)
   
-  sp.list <- sp.list[-cp.sub2]
-  traits3 <- all.traits[match(sp.list, rownames(all.traits)), ]
-  
-  gform.list <- compadre_meta$GrowthType[-cp.sub2]  
-  if (gform == "all") {
-    tree.sub <- 1:nrow(traits3)
+  # pull out a subset of traits for the included species
+  sp.list <- compadre$metadata$SpeciesAccepted[cp.sub]
+  sp.list <- sp.list[-cp_rm]
+  all.traits <- all.traits[match(sp.list, rownames(all.traits)), ]
+
+  # pull out rows that match the chosen growth form
+  gform.list <- compadre$metadata$GrowthType[cp.sub][-cp_rm]  
+  if (is.null(gform)) {
+    gform.sub <- seq_len(nrow(all.traits))
   } else {
-    if (is.na(match(gform, c("tree", "shrub", "herb", "palm")))) {
-      warning(paste0("'", gform, "'", " is not one of 'tree, 'shrub', 'herb' or 'palm'; gform = 'tree' by default"),
-              call. = FALSE)
-      gform <- "tree"
-    }
-    gform_set <- switch(gform,
-                        "tree" = "Tree",
-                        "shrub" = "Shrub",
-                        "herb" = "Herbaceous perennial",
-                        "palm" = "Palm")
-    tree.sub <- which(gform.list == gform)
+    gform.sub <- which(gform.list == gform)
   }
   
-  if (param == "growth") {
-    y.temp <- y[, , tree.sub]
-    mats.out <- mats.out[tree.sub]
+  # subset to the selected gform
+  if (vital == "growth") {
+    y.temp <- y[, , gform.sub]
+    mats.out <- mats.out[gform.sub]
   } else {
-    y.temp <- y[tree.sub, ]
-    mats.out <- mats.out[tree.sub]
+    y.temp <- y[gform.sub, ]
+    mats.out <- mats.out[gform.sub]
   }
-  gform.list <- gform.list[tree.sub]
-  x.temp <- x[tree.sub, ]
-  groups.temp <- as.matrix(groups[tree.sub, ], ncol = 1)
-  traits.temp <- traits3[tree.sub, ]
-  comp.meta <- comp.meta[tree.sub, ]
-  
-  final.sub <- which(apply(traits.temp, 1, function(x) sum(is.na(x))) == 0)
-  
-  if (param == 'growth') {
+  gform.list <- gform.list[gform.sub]
+  x.temp <- x[gform.sub, ]
+  groups.temp <- as.matrix(groups[gform.sub, ], ncol = 1)
+  all.traits <- all.traits[gform.sub, ]
+  comp.meta <- comp.meta[gform.sub, ]
+
+  # remove any rows with missing trait data  
+  final.sub <- which(apply(all.traits, 1, function(x) sum(is.na(x))) == 0)
+  if (vital == "growth") {
     y <- y.temp[, , final.sub]
     mats.out <- mats.out[final.sub]
   } else {
@@ -118,14 +142,15 @@ compadre_data_load <- function(param = "growth", gform = "tree",
   x <- sweep(x, 2, apply(x, 2, mean), "-")
   x <- sweep(x, 2, apply(x, 2, sd), "/")
   groups <- cbind(as.integer(as.factor(groups.temp[final.sub, ])),
-                  as.integer(as.factor(GFORM[final.sub])))
+                  as.integer(as.factor(growth[final.sub])))
   comp.meta <- comp.meta[final.sub, ]
   
+  # create final output data frame
   out <- NULL
-  if (param == "growth") {
+  if (vital == "growth") {
     nj <- apply(y[1, , ], 2, function(x) sum(!is.na(x)))
-    for (i in 1:dim(y)[3]) {
-      tmp <- data.frame(y = c(y[1:nj[i], 1:nj[i], i]),
+    for (i in seq_len(dim(y)[3])) {
+      tmp <- data.frame(y = c(y[seq_len(nj[i]), seq_len(nj[i]), i]),
                         bins1 = rep(round(seq(0, 1, length = nj[i]), 2), times = nj[i]),
                         bins2 = rep(round(seq(0, 1, length = nj[i]), 2), each = nj[i]),
                         seed_mass = rep(x[i, 1], times = (nj[i] * nj[i])),
@@ -140,8 +165,8 @@ compadre_data_load <- function(param = "growth", gform = "tree",
     }
   } else {
     nj <- apply(y, 1, function(x) sum(!is.na(x)))
-    for (i in 1:nrow(y)) {
-      tmp <- data.frame(y = c(y[i, 1:nj[i]]),
+    for (i in seq_len(nrow(y))) {
+      tmp <- data.frame(y = c(y[i, seq_len(nj[i])]),
                         bins = round(seq(0, 1, length = nj[i]), 2),
                         seed_mass = rep(x[i, 1], times = nj[i]),
                         sla = rep(x[i, 2], times = nj[i]),
@@ -155,10 +180,11 @@ compadre_data_load <- function(param = "growth", gform = "tree",
     }
   }
   
-  return(list(out = out,
+  # return outputs
+  out <- list(out = out,
               mat = mats.out,
               traits = traits.temp[final.sub, ],
-              comp.meta = comp.meta))
+              comp.meta = comp.meta)
+  out
   
 }
-
