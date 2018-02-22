@@ -1,0 +1,14 @@
+.Rhistory
+.Rapp.history
+.RData
+.DS_Store
+outputs/*
+*-Ex.R
+/*.tar.gz
+/*.Rcheck/
+*.swp
+.httr-oauth
+data/*
+*__*
+
+
