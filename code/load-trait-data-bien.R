@@ -1,5 +1,13 @@
+# R code to download trait data to match the COMPADRE database
+
+# optional: set working directory
+# setwd("PATH/TO/DIR")
+
+# load packages
+library(BIEN)
+
 # load COMPADRE data
-load("./raw-data/COMPADRE_v.X.X.X.RData")
+load("./data/COMPADRE_v.4.0.1.RData")
 
 # filter by species with eight or more size classes
 cp.sub <- which((compadre$metadata$MatrixCriteriaSize != "No") &
@@ -131,3 +139,12 @@ rownames(all.traits)[fm_sub] <- paste0(rownames(all.traits)[fm_sub], "_fam_sub")
 # return reduced COMPADRE data set
 compadre_mat <- compadre$mat[cp.sub]
 compadre_meta <- compadre$metadata[cp.sub, ]
+
+# tidy workspace
+rm(bien_db, bien.data.sp, bien.data.gn, bien.data.fm,
+   cols.to.fill, compadre, compadre_data, cp.sub,
+   data_tmp, fm_match, fm_missing, fm_replace, fm_sub,
+   fm.list, fm.new, gn_match, gn_missing, gn_replace, gn_sub,
+   gn.list, gn.new, i, na_sum, na_sum_fm, na_sum_gn,
+   sp_match, sp_missing, sp.list, trait_sub, trait.list,
+   trait.vals)

@@ -12,6 +12,11 @@ library(BIEN)
 
 # load trait data (WARNING: could take > 20 min)
 # source("./code/load-trait-data-bien.R")
+all.traits <- read.csv("./data/bien_trait_data_not_imputed.csv",
+                       row.names = 1)
+sp.names <- read.csv("./data/bien_species_names.csv", row.names = 1)
+gn.sp <- read.csv("./data/bien_genus_to_species.csv", row.names = 1)
+fm.sp <- read.csv("./data/bien_family_to_species.csv", row.names = 1)
 
 # set response variable for imputation
 y <- all.traits
@@ -20,9 +25,10 @@ y <- all.traits
 rows_to_rm <- which(apply(y, 1, function(x) all(is.na(x))))
 
 # create a data frame matching species to genera to families
-sp_to_fam <- data.frame(sp = factor(sp.list),
-                        gn = factor(gn.sp),
+sp_to_fam <- data.frame(sp = sp.names,
+                        gn = gn.sp,
                         fm = fm.sp)
+colnames(sp_to_fam) <- c("sp", "gn", "fm")
 
 # remove species with no trait data
 sp_to_fam <- sp_to_fam[-rows_to_rm, ]
@@ -35,7 +41,8 @@ sp_to_fam$fm_int <- as.integer(as.factor(as.integer(sp_to_fam$fm)))
 # convert response variable to a vector
 y <- c(y[-rows_to_rm, ])
 missing_ids <- which(is.na(y))
-y <- y[-missing_ids]
+if (length(missing_ids))
+  y <- y[-missing_ids]
 
 # calculate indices for Stan model
 nsp <- nrow(sp_to_fam)
@@ -47,12 +54,14 @@ nlatent <- 6
 
 # convert species, genus and family identities to vectors matching the elements of y
 sp <- rep(sp_to_fam$sp_int, times = ntrait)
-sp <- sp[-missing_ids]
+if (length(missing_ids))
+  sp <- sp[-missing_ids]
 gen <- rep(NA, times = length(unique(sp_to_fam$sp_int)))
 gen[unique(sp_to_fam$sp_int)] <- sp_to_fam$gn_int[match(unique(sp_to_fam$sp_int), sp_to_fam$sp_int)]
 gen[which(is.na(gen))] <- max(gen, na.rm = TRUE) + 1
 trait <- rep(1:ntrait, each = nsp)
-trait <- trait[-missing_ids]
+if (length(missing_ids))
+  trait <- trait[-missing_ids]
 fam <- rep(NA, times = length(unique(sp_to_fam$gn_int)))
 fam[unique(sp_to_fam$gn_int)] <- sp_to_fam$fm_int[match(unique(sp_to_fam$gn_int), sp_to_fam$gn_int)]
 

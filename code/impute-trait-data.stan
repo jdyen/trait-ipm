@@ -66,4 +66,3 @@ generated quantities{
       trait_mat[i, j] = exp(v[j, ] * (u_fam[fam[gen[i]], ] + sigma_gen * eps_gen[gen[i]] + sigma_sp * eps_sp[i]));
 
 }
-

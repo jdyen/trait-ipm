@@ -15,10 +15,11 @@ library(feather)
 source("./code/load-data-helpers.R")
 
 # load COMPADRE database (check version and rename)
-compadre_data <- get(load("./data/COMPADRE_v.X.X.X.RData"))
+compadre_data <- get(load("./data/COMPADRE_v.4.0.1.RData"))
 
 # load trait data
-trait_data <- get(load("./data/imputed_trait_data.R"))
+#trait_data <- get(load("./data/imputed_trait_data.R"))
+trait_data <- read.csv("../data/imputed_trait_data.csv", row.names = 1)
 
 # load growth data for all growth forms
 out <- compadre_data_load(compadre_data = compadre_data,

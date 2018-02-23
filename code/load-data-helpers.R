@@ -15,7 +15,7 @@ compadre_data_load <- function(compadre_data = NULL,
     stop("vital must be one of growth, fec or surv", call. = FALSE)
   
   # subset compadre data to size-structured matrices with > 7 classes
-  cp.sub <- which((compadre_data$metadata$MatrixCriteriaSize == "Yes") &
+  cp.sub <- which((compadre_data$metadata$MatrixCriteriaSize != "No") &
                     (compadre_data$metadata$MatrixDimension > 7) &
                     !is.na(sapply(compadre_data$mat, function(x) x[[2]][1, 1])))
   
