@@ -23,11 +23,18 @@ compadre_data_load <- function(compadre_data = NULL,
   sp.names <- unique(compadre_data$metadata$SpeciesAccepted[cp.sub])
 
   # check trait data (replace all this with trait_data)
-  all.traits <- trait_data
+  all.traits <- trait_data[sp.names, ]
 
+  # remove species with no trait data
+  no_traits <- which(apply(all.traits, 1, function(x) any(is.na(x))))
+  cp_no_traits <- which(!is.na(match(compadre$metadata$SpeciesAccepted[cp.sub], sp.names[no_traits])))
+  cp.sub <- cp.sub[-cp_no_traits]
+  sp.names <- sp.names[-no_traits]
+  all.traits <- all.traits[-no_traits, ]
+  
   # pull out data on growth form for each species
-  gform.vec <- compadre$metadata$GrowthType[cp.sub][match(sp.names,
-                                                          compadre$metadata$SpeciesAccepted[cp.sub])]
+  gform.vec <- compadre$metadata$OrganismType[cp.sub][match(sp.names,
+                                                            compadre$metadata$SpeciesAccepted[cp.sub])]
   
   # pull out population matrices for each vital rate
   cp.mats <- compadre$mat[cp.sub]
@@ -79,7 +86,7 @@ compadre_data_load <- function(compadre_data = NULL,
   }
   
   # subset growth form, species, study and metadata objects to included species
-  growth <- as.integer(compadre$metadata$GrowthType[cp.sub])
+  growth <- as.integer(compadre$metadata$OrganismType[cp.sub])
   growth <- growth[-cp_rm]
   growth <- ifelse(is.na(growth), max(growth, na.rm = TRUE) + 1, growth)
   growth <- as.integer(as.factor(growth))
@@ -91,14 +98,7 @@ compadre_data_load <- function(compadre_data = NULL,
   study <- as.integer(as.factor(study))
   comp.meta <- comp.meta[-cp_rm, ]
   
-  # create trait matrix
-  trait <- matrix(growth, nrow = 1)
-  trait.store <- NULL
-  for (i in seq_len(nrow(trait))) {
-    trait.store <- rbind(trait.store, t(model.matrix(~factor(trait[i, ])))[-1, ])
-  }
-  x <- t(trait.store)
-  colnames(x) <- NULL
+  # create groups matrix
   groups <- matrix(species, ncol = 1)
   
   # pull out a subset of traits for the included species
@@ -107,7 +107,7 @@ compadre_data_load <- function(compadre_data = NULL,
   all.traits <- all.traits[match(sp.list, rownames(all.traits)), ]
 
   # pull out rows that match the chosen growth form
-  gform.list <- compadre$metadata$GrowthType[cp.sub][-cp_rm]  
+  gform.list <- compadre$metadata$OrganismType[cp.sub][-cp_rm]  
   if (is.null(gform)) {
     gform.sub <- seq_len(nrow(all.traits))
   } else {
@@ -123,7 +123,6 @@ compadre_data_load <- function(compadre_data = NULL,
     mats.out <- mats.out[gform.sub]
   }
   gform.list <- gform.list[gform.sub]
-  x.temp <- x[gform.sub, ]
   groups.temp <- as.matrix(groups[gform.sub, ], ncol = 1)
   all.traits <- all.traits[gform.sub, ]
   comp.meta <- comp.meta[gform.sub, ]
@@ -138,7 +137,7 @@ compadre_data_load <- function(compadre_data = NULL,
     mats.out <- mats.out[final.sub]
   }
   gform.list <- gform.list[final.sub]
-  x <- traits.temp[final.sub, ]
+  x <- all.traits[final.sub, ]
   x <- sweep(x, 2, apply(x, 2, mean), "-")
   x <- sweep(x, 2, apply(x, 2, sd), "/")
   groups <- cbind(as.integer(as.factor(groups.temp[final.sub, ])),
@@ -183,7 +182,8 @@ compadre_data_load <- function(compadre_data = NULL,
   # return outputs
   out <- list(out = out,
               mat = mats.out,
-              traits = traits.temp[final.sub, ],
+              traits = all.traits,
+              traits.std = x,
               comp.meta = comp.meta)
   out
   

@@ -8,7 +8,6 @@
 
 # load packages
 library(rstan)
-library(BIEN)
 
 # load trait data (WARNING: could take > 20 min)
 # source("./code/load-trait-data-bien.R")
@@ -39,7 +38,7 @@ sp_to_fam$gn_int <- as.integer(as.factor(as.integer(sp_to_fam$gn)))
 sp_to_fam$fm_int <- as.integer(as.factor(as.integer(sp_to_fam$fm)))
 
 # convert response variable to a vector
-y <- c(y[-rows_to_rm, ])
+y <- unlist(y[-rows_to_rm, ])
 missing_ids <- which(is.na(y))
 if (length(missing_ids))
   y <- y[-missing_ids]
@@ -100,3 +99,9 @@ mod <- sampling(object = mod_compiled,
 # summarise fitted model and store mean values in a matrix
 out <- summary(mod, pars = "trait_mat")$summary
 out_mat <- matrix(out[, "mean"], ncol = ncol(all.traits), byrow = TRUE)
+rownames(out_mat) <- sp_to_fam$sp[order(sp_to_fam$sp_int)]
+colnames(out_mat) <- c("sd_mass", "sla", "ht", "wd_dens")
+
+# optional: save imputed traits
+# write.csv(out_mat, file = "./data/bien_trait_data_imputed.csv")
+
