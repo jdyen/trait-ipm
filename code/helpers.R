@@ -15,8 +15,8 @@ pd <- import("pandas")
 # load data from pre-compiled data sets
 load_data <- function(growth_form = "tree", param_type = "growth", n_induce = 10) {
   
-  filename <- paste0("./data/", growth_form, "_", param_type, "_data.feather")
-  df <- feather(filename)
+  filename <- paste0("./data/", growth_form, "_", param_type, "_data.R")
+  df <- get(load(filename))$out
   if (param_type == "growth") {
     if (growth_form == "tree" | growth_form == "shrub") {
       xx <- data.frame("bins1" = df$bins1,
@@ -438,7 +438,7 @@ plot_gpmod <- function(m,
   old_mar <- par()$mar
   if (m$gform == "all") {
     if (trait_name != "all") {
-      warning("model was fitted to all growth forms; predict function will default to trait_name = "all"",
+      warning("model was fitted to all growth forms; predict function will default to trait_name = 'all'",
               call. = FALSE)
       trait_name <- "all"
     }
@@ -453,7 +453,7 @@ plot_gpmod <- function(m,
     n_row <- 2
   } else {
     if (is.na(match(trait_name, c("sla", "seed_mass", "ht", "wood_den")))) {
-      warning(paste0(""", trait_name, """, " is not a valid trait_name; trait_name = "seed_mass" by default"),
+      warning(paste0("'", trait_name, "'", " is not a valid trait_name; trait_name = 'seed_mass' by default"),
               call. = FALSE)
       trait_name <- "seed_mass"
     }

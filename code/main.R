@@ -6,7 +6,6 @@
 #   -pre-compiled .feather data files for each growth form
 #   -helper functions (helpers.R)
 #   -reticulate R package
-#   -feather R package
 #   -python3 installed locally with GPflow, numpy, feather and pandas libraries
 
 # optional: clear workspace
@@ -17,8 +16,6 @@
 
 # load packages
 library(reticulate)
-library(feather)
-library(parallel)
 
 # required: set python version
 use_python("/usr/local/bin/python3", required = TRUE)
