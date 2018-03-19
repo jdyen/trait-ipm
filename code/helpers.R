@@ -15,7 +15,7 @@ pd <- import("pandas")
 # load data from pre-compiled data sets
 load_data <- function(growth_form = "tree", param_type = "growth", n_induce = 10) {
   
-  filename <- paste0("./data/", growth_form, "_", param_type, "_data.R")
+  filename <- paste0("./data/", growth_form, "_", param_type, "_data.RData")
   df <- get(load(filename))$out
   if (param_type == "growth") {
     if (growth_form == "tree" | growth_form == "shrub") {

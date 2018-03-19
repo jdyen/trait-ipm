@@ -23,84 +23,84 @@ out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "growth",
                           gform = NULL)
-save(out, file = "./data/all_growth_data.R")
+save(out, file = "./data/all_growth_data.RData")
 
 # load fecundity data for all growth forms
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "fec",
                           gform = NULL)
-save(out, file = "./data/all_fec_data.R")
+save(out, file = "./data/all_fec_data.RData")
 
 # load survival data for all growth forms
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "surv",
                           gform = NULL)
-save(out, file = "./data/all_surv_data.R")
+save(out, file = "./data/all_surv_data.RData")
 
 # load growth data for trees, shrubs, herbs and palms
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "growth",
                           gform = "Tree")
-save(out, file = "./data/tree_growth_data.R")
+save(out, file = "./data/tree_growth_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "growth",
                           gform = "Shrub")
-save(out, file = "./data/shrub_growth_data.R")
+save(out, file = "./data/shrub_growth_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "growth",
                           gform = "Herbaceous perennial")
-save(out, file = "./data/herb_growth_data.R")
+save(out, file = "./data/herb_growth_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "growth",
                           gform = "Palm")
-save(out, file = "./data/palm_growth_data.R")
+save(out, file = "./data/palm_growth_data.RData")
 
 # load fecundity data for trees, shrubs, herbs and palms
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "fec",
                           gform = "Tree")
-save(out, file = "./data/tree_fec_data.R")
+save(out, file = "./data/tree_fec_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "fec",
                           gform = "Shrub")
-save(out, file = "./data/shrub_fec_data.R")
+save(out, file = "./data/shrub_fec_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "fec",
                           gform = "Herbaceous perennial")
-save(out, file = "./data/herb_fec_data.R")
+save(out, file = "./data/herb_fec_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "fec",
                           gform = "Palm")
-save(out, file = "./data/palm_fec_data.R")
+save(out, file = "./data/palm_fec_data.RData")
 
 # load survival data for trees, shrubs, herbs and palms
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "surv",
                           gform = "Tree")
-save(out, file = "./data/tree_surv_data.R")
+save(out, file = "./data/tree_surv_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "surv",
                           gform = "Shrub")
-save(out, file = "./data/shrub_surv_data.R")
+save(out, file = "./data/shrub_surv_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "surv",
                           gform = "Herbaceous perennial")
-save(out, file = "./data/herb_surv_data.R")
+save(out, file = "./data/herb_surv_data.RData")
 out <- compadre_data_load(compadre_data = compadre_data,
                           trait_data = trait_data,
                           vital = "surv",
                           gform = "Palm")
-save(out, file = "./data/palm_surv_data.R")
+save(out, file = "./data/palm_surv_data.RData")
