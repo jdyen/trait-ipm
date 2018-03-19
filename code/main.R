@@ -17,6 +17,8 @@
 # load packages
 library(reticulate)
 library(parallel)
+library(viridis)
+library(ggplot2)
 
 # required: set python version
 use_python("/usr/local/bin/python3", required = TRUE)
@@ -55,7 +57,7 @@ gform_traits <- list(c("all"),
 eps_set <- c(0.002, 0.005, 0.005)
 
 # toggle cross validation
-cross_val <- FALSE
+cross_val <- TRUE
 
 # loop through all growth forms and fit GP models
 for (i in seq_along(gform_opt)) {
@@ -129,6 +131,7 @@ for (i in seq_along(gform_opt)) {
   # remove 1s and 0s
   data_set$Y <- ifelse(data_set$Y >= 1, 0.9999, data_set$Y)
   data_set$Y <- ifelse(data_set$Y <= 0, 0.0001, data_set$Y)
+  data_set$Y <- ifelse(is.na(data_set$Y), mean(data_set$Y, na.rm = TRUE), data_set$Y)
   
   # inverse logistic transform survival data to convert (0, 1) data to (-Inf, Inf)
   data_set$Y <- qlogis(data_set$Y)
