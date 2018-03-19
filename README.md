@@ -36,4 +36,6 @@ Several scripts and pre-compiled data files are provided:
 -impute-trait-data.R imputes missing trait data using a hierarchical Bayesian variation of probabilistic matrix factorization (see Schrodt et al. 2015, GEB 24:1510-1521 for details of the method). This model was implemented in Stan, using the rstan R package.  
 -several additional scripts contain helper functions for the above scripts and should not need to be run directly.  
 
+## Data availability
+All analyses using the COMPADRE and BIEN databases and all users should refer to their respective websites (www.compadre-db.org/ and biendata.org). For reproducibility purposes, users can re-run our analysis from scratch using the COMPADRE database v.4.0.1 and the included script to download BIEN trait data. Each step can take some time (>30 min), so we also provide pre-compiled .RData files with the trait and demographic data used in our analysis. These files are available at figshare.com/not_added_yet and are provided for reproducibility purposes only. Any users wishing to use COMPADRE or BIEN data should refer to the websites listed above and follow their respective data use policies.
 
