@@ -3,7 +3,7 @@
 #   as continuous funtions of size. The model uses a sparse GP approximation.
 #
 # Requires:
-#   -pre-compiled .R data files for each growth form
+#   -pre-compiled .RData data files for each growth form
 #   -helper functions (helpers.R)
 #   -reticulate R package
 #   -python3 installed locally with GPflow, numpy, feather and pandas libraries
