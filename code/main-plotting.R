@@ -32,9 +32,6 @@ gform_opt <- c("all", "tree", "shrub", "herb", "palm")
 # define GP model settings
 num_iter <- 5000         # total number of iterations
 num_burn <- 2500         # number of burn-in iterations to discard
-num_cv <- "loo"          # blocks by species, "loo" holds out one species per fold
-num_iter_cv <- 5000      # number of iterations for cross validation
-num_burn_cv <- 2500      # number of burn-in iterations to discard in cross validation
 max_it_optim_set <- 1000 # number of iterations to optimise starting values
 
 # number of inducing points for sparse GP model
