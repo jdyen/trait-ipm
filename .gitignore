@@ -3,6 +3,7 @@
 .RData
 .DS_Store
 outputs/*
+writeup/*
 *-Ex.R
 /*.tar.gz
 /*.Rcheck/
