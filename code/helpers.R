@@ -765,3 +765,115 @@ lambda_full_calc <- function(gform = "tree",
   }
   return(lambda_out)
 }
+
+# plot fitted GP model with kernels as a function of traits/predictors
+prepare_plot_outputs <- function(m,
+                                 trait_name = "sla",
+                                 size_res = 100, seq_len = NULL,
+                                 trait_min = -3., trait_max = 3.,
+                                 trait_mean_real = 20, trait_sd_real = 5) {
+  if (m$gform == "all") {
+    if (trait_name != "all") {
+      warning("model was fitted to all growth forms; predict function will default to trait_name = 'all'",
+              call. = FALSE)
+      trait_name <- "all"
+    }
+    if (!is.null(seq_len)) {
+      if (seq_len != 4) {
+        warning("predict function will set seq_len = 4 for model of all growth forms",
+                call. = FALSE)
+      }
+    }
+    seq_len <- 4
+    n_col <- 2
+    n_row <- 2
+  } else {
+    if (is.na(match(trait_name, c("sla", "seed_mass", "ht", "wood_den")))) {
+      warning(paste0("'", trait_name, "'", " is not a valid trait_name; trait_name = 'seed_mass' by default"),
+              call. = FALSE)
+      trait_name <- "seed_mass"
+    }
+    if (is.null(seq_len)) {
+      if (m$param == "growth") {
+        seq_len <- 4
+      } else {
+        seq_len <- 100
+      }
+    }
+    n_col <- ceiling(seq_len / 3)
+    n_row <- ceiling(seq_len / n_col)
+    if (m$gform == "tree") {
+      trait_mean_real <- switch(trait_name,
+                                "sla" = 13.3,
+                                "seed_mass" = 0.55,
+                                "ht" = 20.0,
+                                "wood_den" = 0.52)
+      trait_sd_real <- switch(trait_name,
+                              "sla" = 3.4,
+                              "seed_mass" = 0.1,
+                              "ht" = 6.,
+                              "wood_den" = 0.15)
+    } else {
+      if (m$gform == "shrub") {
+        trait_mean_real <- switch(trait_name,
+                                  "sla" = 13.6,
+                                  "seed_mass" = 2.14,
+                                  "ht" = 3.75,
+                                  "wood_den" = 0.62)
+        trait_sd_real <- switch(trait_name,
+                                "sla" = 4.,
+                                "seed_mass" = 0.5,
+                                "ht" = 0.9,
+                                "wood_den" = 0.1)
+      } else {
+        if (m$gform == "herb") {
+          trait_mean_real <- switch(trait_name,
+                                    "sla" = 20.4,
+                                    "seed_mass" = 0.01,
+                                    "ht" = 0.7)
+          trait_sd_real <- switch(trait_name,
+                                  "sla" = 2.5,
+                                  "seed_mass" = 0.001,
+                                  "ht" = 0.2)
+        } else {
+          trait_mean_real <- switch(trait_name,
+                                    "seed_mass" = 0.23,
+                                    "ht" = 13.3)
+          trait_sd_real <- switch(trait_name,
+                                  "seed_mass" = 0.05,
+                                  "ht" = 3.5)
+        }
+      }
+    }
+  }
+  plot_vals <- predict_gp(m, trait_name = trait_name, size_res = size_res,
+                          seq_len = seq_len, trait_min = trait_min,
+                          trait_max = trait_max)
+  trait_name_plot <- switch(trait_name,
+                            "sla" = "Specific leaf area",
+                            "seed_mass" = "Seed mass",
+                            "ht" = "Maximum height",
+                            "wood_den" = "Wood density")
+  gform_names <- c("Trees", "Shrubs", "Herbs", "Palms")
+  
+  # compile outputs needed for plotting
+  out <- list(plot_vals = plot_vals,
+              trait_name = trait_name,
+              trait_name_plot = trait_name_plot,
+              trait_mean_real = trait_mean_real,
+              trait_sd_real = trait_sd_real,
+              trait_min = trait_min,
+              trait_max = trait_max,
+              seq_len = seq_len,
+              n_row = n_row,
+              n_col = n_col,
+              size_res = size_res,
+              gform_names = gform_names,
+              param = m$param)
+  
+  # return outputs
+  out
+  
+}
+
+

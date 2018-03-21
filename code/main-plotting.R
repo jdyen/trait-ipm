@@ -56,9 +56,6 @@ gform_traits <- list(c("all"),
 # set tolerances for each vital rate (growth, fecundity, survival)
 eps_set <- c(0.002, 0.005, 0.005)
 
-# toggle cross validation
-cross_val <- TRUE
-
 # loop through all growth forms and fit GP models
 for (i in seq_along(gform_opt)) {
   
@@ -83,19 +80,7 @@ for (i in seq_along(gform_opt)) {
                              lmin = 1, lmax = 50,
                              max_it_optim = 1000)
   
-  if (cross_val) {
-    # cross validated fitted growth model
-    mod_grow_tmp_cv <- gp_cv(mod_grow_tmp,
-                             n_cv = num_cv,
-                             n_iter = num_iter_cv,
-                             n_burn = num_burn_cv,
-                             eps = eps_set[1],
-                             lmin = 1, lmax = 50,
-                             max_it_optim = 1000,
-                             par_run = FALSE)
-  }
-  
-  # load fecundity data for growth form i
+# load fecundity data for growth form i
   data_set <- load_data(growth_form = gform_opt[i],
                         param_type = "fec",
                         n_induce = num_induce[i, 2])
@@ -110,18 +95,6 @@ for (i in seq_along(gform_opt)) {
                             eps = eps_set[2],
                             lmin = 1, lmax = 50,
                             max_it_optim = 1000)
-  
-  if (cross_val) {
-    # cross validated fitted fecundity model
-    mod_fec_tmp_cv <- gp_cv(mod_fec_tmp,
-                            n_cv = num_cv,
-                            n_iter = num_iter_cv,
-                            n_burn = num_burn_cv,
-                            eps = eps_set[2],
-                            lmin = 1, lmax = 50,
-                            max_it_optim = 1000,
-                            par_run = FALSE)
-  }
   
   # load survival data for growth form i
   data_set <- load_data(growth_form = gform_opt[i],
@@ -144,73 +117,23 @@ for (i in seq_along(gform_opt)) {
                              lmin = 1, lmax = 50,
                              max_it_optim = 1000)
 
-  if (cross_val) {
-    # cross validated fitted survival model
-    mod_surv_tmp_cv <- gp_cv(mod_surv_tmp,
-                             n_cv = num_cv,
-                             n_iter = num_iter_cv,
-                             n_burn = num_burn_cv,
-                             eps = eps_set[3],
-                             lmin = 1, lmax = 50,
-                             max_it_optim = 1000,
-                             par_run = FALSE)
-  }
-  
-  # plot fitted models
+  # create plot outputs for fitted models
   for (j in seq_along(gform_traits[[i]])) {
     
-    # plot growth
-    png(file = paste0("./outputs/plots/gp-plot-growth-",
-                      gform_opt[i],
-                      "-",
-                      gform_traits[[i]][j],
-                      ".png"),
-        width = 6, height = 6, units = "in",
-        res = 300)
-    plot_gpmod(mod_grow_tmp, trait_name = gform_traits[[i]][j])
-    dev.off()
+    # prepare outputs to plot growth
+    out_grow <- prepare_plot_outputs(mod_grow_tmp, trait_name = gform_traits[[i]][j])
     
-    # plot fecundity
-    png(file = paste0("./outputs/plots/gp-plot-fec-",
-                      gform_opt[i],
-                      "-",
-                      gform_traits[[i]][j],
-                      ".png"),
-        width = 6, height = 6, units = "in",
-        res = 300)
-    plot_gpmod(mod_fec_tmp, trait_name = gform_traits[[i]][j])
-    dev.off()
+    # prepare outputs to plot fecundity
+    out_fec <- prepare_plot_outputs(mod_fec_tmp, trait_name = gform_traits[[i]][j])
     
-    # plot survival
-    png(file = paste0("./outputs/plots/gp-plot-surv-",
-                      gform_opt[i],
-                      "-",
-                      gform_traits[[i]][j],
-                      ".png"),
-        width = 6, height = 6, units = "in",
-        res = 300)
-    plot_gpmod(mod_surv_tmp, trait_name = gform_traits[[i]][j])
-    dev.off()
-    
-  }
-  
-  if (cross_val) {
-    
-    # collate full model and cross-validated model in a single list
-    mod_grow <- list(mod = mod_grow_tmp, mod_cv = mod_grow_tmp_cv)
-    mod_fec <- list(mod = mod_fec_tmp, mod_cv = mod_fec_tmp_cv)
-    mod_surv <- list(mod = mod_surv_tmp, mod_cv = mod_surv_tmp_cv)
-    
-    # summary fitted models using gp_mod_summary() helper function
-    out_grow <- gp_mod_summary(mod_grow)
-    out_fec <- gp_mod_summary(mod_fec)
-    out_surv <- gp_mod_summary(mod_surv)
+    # prepare outputs to plot survival
+    out_surv <- prepare_plot_outputs(mod_surv_tmp, trait_name = gform_traits[[i]][j])
     
     # save outputs to outputs directory
-    save(out_grow, file = paste0("./outputs/fitted_growth_", gform_opt[i], ".RData"))
-    save(out_fec, file = paste0("./outputs/fitted_fec_", gform_opt[i], ".RData"))
-    save(out_surv, file = paste0("./outputs/fitted_surv_", gform_opt[i], ".RData"))
+    save(out_grow, file = paste0("./outputs/pre-plot/growth_", gform_opt[i], "-", gform_traits[[i]][j], ".RData"))
+    save(out_fec, file = paste0("./outputs/pre-plot/fec_", gform_opt[i], "-", gform_traits[[i]][j], ".RData"))
+    save(out_surv, file = paste0("./outputs/pre-plot/surv_", gform_opt[i], "-", gform_traits[[i]][j], ".RData"))
     
-  }   
+  }
   
 }
