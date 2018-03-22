@@ -10,6 +10,7 @@ writeup/*
 *.swp
 .httr-oauth
 data/*
+raw-data/*
 *__*
 
 
